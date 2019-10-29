@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>充值</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+	</head>
+	<body class="mine-body" lang-cloak>
+		<div class="mui-content mui-fullscreen recharge-content">
+			<div class="status"></div>
+			<div class="content mui-hidden">
+				<div class="recharge-block">
+					<h5 class="recharge-title" lang="walletAddress"></h5>
+					<p class="recharge-address"></p>
+				</div>
+				<div class="recharge-block">
+					<h5 class="recharge-title" lang="walletCode"></h5>
+					<div class="qrcode"></div>
+					<div class="btn-row">
+						<button data-type='usdt' type="button" class="mui-btn mui-btn-block mui-btn-primary" lang="btnCopy"></button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/qrcode.min.js"></script>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script>
+			var data = null;
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						walletAddress: 'Wallet Address',
+						walletCode: 'Wallet Address Qrcode',
+						btnCopy: 'Copy wallet address',
+						addressError: 'Failed to get address'
+					},
+					zh: {
+						walletAddress: '充值钱包地址',
+						walletCode: '充值钱包地址二维码',
+						btnCopy: '复制钱包地址',
+						addressError: '获取地址失败'
+					}
+				}
+			});
+
+			mui.plusReady(function() {
+
+				mui('.mui-content').on('tap', '.mui-btn-primary', function() {
+					if (data && data.USDT) {
+						CopyToClip(data.USDT);
+						mui.toast(i18n.t('copySuccess'));
+						return;
+					}
+					mui.alert(i18n.t('addressError'), i18n.t('tip'), i18n.confirm());
+				});
+
+				addErrorViewTap(function() {
+					initData();
+				});
+
+				initData();
+
+			});
+
+			function initData(index) {
+
+				document.querySelector('.status').innerHTML = loadingView();
+
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!getMyWalletAddress.action',
+					success: function(eResult) {
+						data = eResult.data;
+
+						var usdtAddress = data.USDT;
+						if (usdtAddress) {
+							new QRCode(document.querySelector('.qrcode'), {
+								text: usdtAddress,
+								width: 200,
+								height: 200,
+								colorDark: '#000000',
+								colorLight: '#ffffff',
+								correctLevel: QRCode.CorrectLevel.H
+							});
+							document.querySelector('.status').hide();
+							document.querySelector('.content').show();
+							document.querySelector('.recharge-address').textContent = usdtAddress;
+						} else {
+							document.querySelector('.status').innerHTML = errorView("暂无充值地址");
+						}
+					},
+					error: function(msg) {
+						document.querySelector('.status').innerHTML = errorView(msg);
+						return true;
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>收益提取</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+		<link rel="stylesheet" href="../../css/dialog.css" />
+		<style>
+			.withdraw-content{display: flex;flex-direction: column;overflow-y: auto;}
+			.withdraw-top{padding: 22px 16px;}
+			.withdraw-top .body{background:linear-gradient(135deg,rgba(248,135,0,1) 0%,rgba(243,154,0,1) 100%);border-radius:4px;line-height: 50px;padding: 0 18px;color: #fff;}
+			.withdraw-top .name{font-size: 16px;float: left;}
+			.withdraw-top .value{overflow: hidden;text-align: center;font-size: 19px;}
+			.withdraw-arival{padding: 0 16px;background: #fff;margin-top: 12px;color: #666666;line-height: 44px;font-size: 13px;}
+			.withdraw-arival .value{font-size: 18px;color: #21A0FF;font-weight: bold;margin-left: 6px;}
+			.withdraw-fee{text-align: right;font-size: 13px;color: #666666;padding: 12px;flex-grow: 1;}
+			.withdraw-content .btn-row{margin-top: 18px;}
+			.withdraw-content .btn-row button{border-radius: 0;margin-bottom: 0;}
+		</style>
+	</head>
+	<body lang-cloak>
+		<div class="mui-content mui-fullscreen withdraw-content" v-cloak>
+			<div class="withdraw-top">
+				<div class="body">
+					<span class="name" lang="balance">余额：</span>
+					<div class="value">{{balance}} USDT</div>
+				</div>
+			</div>
+			<div class="form-block">
+				<div class="form-block-title" lang="taddress">钱包地址(WVS)</div>
+				<div class="form-block-input">
+					<textarea id="walletAddress" v-model="walletAddress" rows="3" lang="pl_address" vf='rq=pl_address'></textarea>
+				</div>
+			</div>
+			<div class="form-block">
+				<div class="form-block-title" lang="tamount">提取数量</div>
+				<div class="form-block-input">
+					<div class="mui-input-row">
+						<input id="money" v-model="money" type="text" class="mui-input-clear" lang="pl_tamount" vf="rq=pl_tamount,reg=num(err_tamount)">
+					</div>
+				</div>
+			</div>
+			<div class="withdraw-arival">
+				<span lang="actual">实际到账</span>
+				<span class="value">{{actual}} WVS</span>
+			</div>
+			<div class="withdraw-arival">
+				<span lang="wvs_usdt">WVS价格</span>
+				<span class="value">{{wvs_usdt}} USDT</span>
+			</div>
+			<div class="withdraw-fee">
+				<span lang="fee">手续费</span>{{fee}} WVS
+				<!-- <span lang="fee">手续费</span>{{fee1}}% -->
+			</div>
+			<div class="btn-row">
+				<button type="button" class="mui-btn mui-btn-block mui-btn-primary" lang="btnText"></button>
+			</div>
+		</div>
+		<script src="../../lib/vue.min.js"></script>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/form.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script src="../../js/dialog.js"></script>
+		<script>
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						balance: 'Balance：',
+						taddress: 'Wallet Address',
+						pl_address: 'Please enter the wallet address',
+						tamount: 'Withdraw amount',
+						pl_tamount: 'Please enter the withdraw amount',
+						err_tamount: 'The withdraw amount must be a positive integer',
+						tamountZero: 'Withdraw amount must be greater than 0',
+						fee: 'Fee',
+						actual: 'Actual arrival',
+						btnText: 'Confirm withdraw',
+						wvs_usdt: 'WVS Price'
+					},
+					zh: {
+						balance: '余额：',
+						taddress: '钱包地址(WVS)',
+						pl_address: '请输入钱包地址',
+						tamount: '提取数量',
+						pl_tamount: '请输入提取数量',
+						err_tamount: '提取数量必须是正整数',
+						tamountZero: '提币金额必须大于0',
+						fee: '手续费：',
+						actual: '实际到账',
+						btnText: '确认提取',
+						wvs_usdt: 'WVS价格'
+					}
+				}
+			});
+
+			var requestData = null;
+			var walletType;
+
+			var vm = new Vue({
+				el: '.mui-content',
+				data: {
+					balance: 0,
+					walletAddress: '',
+					money: '',
+					fee: 0,
+					fee1: 0,
+					fee2: 0,
+					wvs_usdt: 0
+				},
+				computed: {
+					actual: function() {
+						var moneyVal = parseFloat(this.money);
+						var val = 0;
+						if (moneyVal) {
+							val = ToMoney4(moneyVal / vm.wvs_usdt - this.fee);
+						}
+						return val;
+					}
+				},
+				mounted: function() {
+					initView();
+				},
+
+			});
+
+			function initView() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					walletType = self.type;
+
+					document.querySelector('.mui-btn-primary').addEventListener("tap", function() {
+						FormVerify(function(data) {
+							if (data.money <= 0) {
+								mui.toast(i18n.t('tamountZero'));
+								return;
+							}
+							data.accountType = 'WALLET08';
+							OpenTransferPwdDialog({
+								callback: function(pwd) {
+									OpenVfCodeDialog({
+										vtype: 'TIBI',
+										callback: function(code) {
+											data.authCode = code;
+											app.ajax({
+												path: '/app!tibi.action',
+												data: data,
+												success: function(eResult) {
+													CloseVfCodeDialog();
+													mui.toast(eResult.message);
+													app.fireView(self.opener(), 'updateData');
+													initData();
+												}
+											});
+										}
+									});
+								}
+							});
+						});
+					});
+
+					initData();
+				});
+			}
+
+			function initData() {
+				getBalance();
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!getRate.action',
+					success: function(eResult) {
+						var data = eResult.data;
+						vm.fee = data.fee;
+						vm.fee1 = data.fee1;
+						vm.fee2 = data.fee2;
+						vm.wvs_usdt = data.wvs_usdt;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+
+			function getBalance() {
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!accountBalance.action',
+					data: {
+						accountType: walletType,
+					},
+					success: function(eResult) {
+						vm.balance = eResult.data;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

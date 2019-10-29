@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>设置语言</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+	</head>
+	<body lang-cloak>
+		<div class="mui-content language-content">
+			<h5 class="language-title" lang='title'></h5>
+			<ul class="mui-table-view mui-table-view-radio">
+				<li class="mui-table-view-cell" data-value='zh'>
+					<a class="mui-navigate-right">中文</a>
+				</li>
+				<li class="mui-table-view-cell" data-value='en'>
+					<a class="mui-navigate-right">English</a>
+				</li>
+			</ul>
+			<div class="btn-row">
+				<button type="button" class="mui-btn mui-btn-block mui-btn-primary" lang='confirm'></button>
+			</div>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script src="../../js/update.js"></script>
+		<script>
+			var lang = localStorage.lang;
+			i18n.init({
+				lang: lang || 'zh',
+				res: {
+					en: {
+						title: 'Please set up the APP language',
+						toastTip: 'Please select a language',
+						alertTip: 'Enable Current Language?'
+					},
+					zh: {
+						title: '请设置APP语言',
+						toastTip: '请选择语言',
+						alertTip: '是否启用当前语言?'
+					}
+				},
+			});
+
+			mui.plusReady(function() {
+				plus.navigator.closeSplashscreen();
+
+				if (lang) {
+					document.querySelector('[data-value="' + lang + '"]').classList.add('mui-selected');
+				}
+
+				document.querySelector('.mui-btn-primary').addEventListener('tap', function() {
+					var ele = document.querySelector('.mui-selected');
+					if (!ele) {
+						mui.toast(i18n.t('toastTip'));
+						return;
+					}
+
+					var value = document.querySelector('.mui-selected').dataset.value;
+					if (lang == value) {
+						mui.back();
+					} else {
+						mui.confirm(i18n.t('alertTip'), '', i18n.btns(), function(e) {
+							if (e.index == 1) {
+								app.setLanguage(value);
+
+								var self = plus.webview.currentWebview();
+								if (self.opener().id != 'settings') {
+									//如果是在首页打开,代表是初始化语言
+									app.openLoginWindow();
+								} else {
+									var views = plus.webview.all();
+									var launchView = plus.webview.getLaunchWebview();
+									mui.each(views, function(i, n) {
+										if (n != launchView && n != self) {
+											n.close('none');
+										}
+									});
+									mui.back();
+								}
+								app.fireView('index', 'language');
+							}
+						});
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

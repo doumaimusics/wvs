@@ -1,0 +1,84 @@
+html,
+body {
+	background: transparent !important;
+}
+
+.bottom-view-mask {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 999999;
+	opacity: 0;
+	background: #000;
+	transition: opacity 0.5s ease 0.3s;
+	-webkit-transition: opacity 0.5s ease 0.3s;
+	-moz-transition: opacity 0.5s ease 0.3s;
+}
+
+.bottom-view-mask.show {
+	opacity: 0.5;
+}
+
+.bottom-view-mask.close {
+	display: none;
+}
+
+.bottom-view {
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	padding: 8px;
+	background: #fff;
+	z-index: 999999;
+}
+.bottom-view.show{
+	display: block;
+}
+.bottom-view.close{
+	display: none;
+}
+
+.bottom-header {
+	position: relative;
+	padding: 8px;
+	text-align: center;
+	color: #FFF;
+}
+
+.bottom-close {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 37px;
+	line-height: 37px;
+	font-size: 37px;
+	text-align: center;
+}
+
+.bottom-left {
+	position: absolute;
+	left: 10px;
+	top: 0;
+	line-height: 37px;
+	text-align: center;
+	color: darkorange;
+}
+
+.bottom-view .transfer-top img {
+	padding: 8px 0;
+}
+
+.bottom-view .remark-text {
+	display: inline-block;
+	text-align: left;
+	margin-top: 16px;
+	margin-bottom: 12px;
+}
+
+.bottom-view .remark1 {
+	font-size: 16px;
+	color: gray;
+}

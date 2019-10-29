@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>交易密码</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+	</head>
+	<body class="bg-white" lang-cloak>
+		<div class="mui-content findpass-content">
+			<div class="input-content" style="padding-top: 28px;">
+				<div class="mui-input-row input-row">
+					<input id="newpassword" type="password" class="mui-input-clear" vf="rq,reg=pwd(f_pwderr),tip=alert" lang="pl_npwd" />
+				</div>
+				<div class="mui-input-row input-row">
+					<input id="newpassword_eq" type="password" class="mui-input-clear" vf="rq,eq=newpassword(f_pwdnoequal),tip=alert"
+					 lang="pl_npwd2" />
+				</div>
+				<div class="mui-input-row input-row">
+					<button type="button" class="mui-btn mui-btn-link code-btn" lang="btnCode"></button>
+					<div class="code-input">
+						<input id="authCode" type="text" class="mui-input-clear" vf='rq' lang="pl_code" />
+					</div>
+				</div>
+				<div class="btn-row">
+					<button type="button" class="mui-btn mui-btn-block mui-btn-primary" lang="btnConfirm"></button>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/form.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script>
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						pl_npwd: 'Please enter a new trading password',
+						pl_npwd2: 'Please enter the confirmation trading password',
+						f_pwdnoequal: 'Two new passwords are not equal',
+						f_pwderr: 'Trading password format is incorrect [6~18 length]',
+						btnCode: 'Get Code',
+						pl_code: 'Please enter verification code',
+						btnConfirm: 'Confirm',
+						changeSuccess: 'Password has been updated'
+					},
+					zh: {
+						pl_npwd: '请输入新的交易密码',
+						pl_npwd2: '请输入确认交易密码',
+						f_pwdnoequal: '两次输入新的密码不一致',
+						f_pwderr: '交易密码格式不正确[6~18位]',
+						btnCode: '获取验证码',
+						pl_code: '请输入验证码',
+						btnConfirm: '确认修改',
+						changeSuccess: '修改密码成功'
+					}
+				},
+			});
+
+			var ui = {
+				getCode: document.querySelector('.code-btn'),
+			};
+			mui.plusReady(function() {
+
+				ui.getCode.addEventListener('tap', function() {
+					var that = this;
+					app.ajax({
+						path: '/app!generateValidCode.action',
+						data: {
+							vtype: 'Zhifu'
+						},
+						success: function(eResult) {
+							mui.toast(eResult.message);
+							CountDown(that, 60);
+						}
+					});
+				});
+
+				document.querySelector('.mui-btn-primary').addEventListener("tap", function() {
+					FormVerify(function(data) {
+						data.vtype = 2;
+						app.ajax({
+							path: '/app!changePwd.action',
+							data: data,
+							success: function(eResult) {
+								mui.toast(i18n.t('changeSuccess'));
+								mui.back();
+							}
+						});
+					});
+				});
+			});
+		</script>
+	</body>
+</html>

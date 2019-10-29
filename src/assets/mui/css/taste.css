@@ -1,0 +1,6 @@
+.mui-bar.mui-bar-nav {background: #ffffff;box-shadow: none;-webkit-box-shadow: none;}
+.mui-bar.mui-bar-nav .mui-title {color: #030303;}
+#periodPopover {padding: 12px;text-align: center;background: #fff;}
+#periodPopover .title {font-size: 16px;border-bottom: 1px solid #EDEDED;line-height: 48px;margin-top: -12px;margin-bottom: 8px;}
+#periodPopover .item {padding: 0 8px;margin: 8px 0;}
+#periodPopover .item-content {line-height: 40px;background: #EDEDED;border-radius: 2px;}

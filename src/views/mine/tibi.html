@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>WVS提币</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+		<link rel="stylesheet" href="../../css/dialog.css" />
+	</head>
+	<body class="bg-white" lang-cloak>
+		<div class="mui-content" v-cloak>
+			<div class="transfer-content">
+				<div class="input-title" style="margin-top: 6px;" lang="accountType"></div>
+				<div class="mui-row money-row">
+					<div class="mui-col-xs-6">
+						<div id="usdtTab" class="body active" data-type='USDT'>
+							<h5>可用</h5>
+							<p><span lang="balance"></span>：{{WALLET04}}</p>
+						</div>
+					</div>
+					<div class="mui-col-xs-6">
+						<div id="ethTab" class="body" data-type='ETH'>
+							<h5>可提</h5>
+							<p><span lang="balance"></span>：{{WALLET041}}</p>
+						</div>
+					</div>
+				</div>
+				<div class="input-title" style="margin-top: 28px;" lang="caccount"></div>
+				<div class="mui-input-row input-row">
+					<input id="walletAddress" v-model="account" type="text" class="mui-input-clear" vf="rq" lang="pl_caccount" />
+				</div>
+
+				<div class="input-title" lang="tamount"></div>
+				<div class="mui-input-row input-row">
+					<input id="money" v-model="money" type="number" class="mui-input-clear" v-on:input='inputNum' vf="rq=rq_tamount,reg=num(err_tamount)"
+					 lang="pl_tamount" />
+				</div>
+				<div class="input-title" lang="fee"></div>
+				<div class="mui-input-row input-row">
+					<input id="fee" v-model="fee" type="text" readonly="readonly" class="mui-input-clear" />
+				</div>
+				<div class="btn-row">
+					<button type="button" class="mui-btn mui-btn-block mui-btn-primary" lang="btnText"></button>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/vue.min.js"></script>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/form.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script src="../../js/dialog.js"></script>
+		<script>
+			var findAccountNameTimeId = null;
+			var requestData = null;
+
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						accountType: 'Account type',
+						balance: 'Balance',
+						caccount: 'WVS Wallet Address',
+						tamount: 'Transfer amount',
+						pl_caccount: 'Please enter the WVS wallet address',
+						pl_tamount: 'Please enter a positive integer',
+						rq_tamount: 'Please enter the extract amount',
+						err_tamount: 'The extract amount must be a positive integer',
+						remarks: 'Remarks',
+						pl_remarks: 'Fee',
+						btnText: 'Confirm extract',
+						tamountZero: 'Transfer amount must be greater than 0',
+						fee: 'Fee',
+						tibi: 'Extract'
+					},
+					zh: {
+						accountType: '提币账户',
+						balance: '余额',
+						caccount: 'WVS钱包地址',
+						tamount: '提币数量',
+						pl_caccount: '请输入WVS钱包地址',
+						pl_tamount: '请输入正整数',
+						rq_tamount: '请输入提币数量',
+						err_tamount: '提币数量必须是正整数',
+						remarks: '提币备注',
+						pl_remarks: '请输入备注信息',
+						btnText: '确认提币',
+						tamountZero: '提币金额必须大于0',
+						fee: '手续费',
+						tibi: '可用提现'
+					}
+				}
+			});
+
+			var vm = new Vue({
+				el: '.mui-content',
+				data: {
+					WALLET04: 0,
+					WALLET041: 0,
+					account: '',
+					remark: '',
+					money: '',
+					accountName: '',
+					fee: 0
+				},
+				watch: {
+					account: function(val) {
+						if (findAccountNameTimeId != null) {
+							clearTimeout(findAccountNameTimeId);
+							findAccountNameTimeId = null;
+						}
+						if (!vm.account) {
+							vm.accountName = '';
+						} else {
+
+						}
+					},
+				},
+				methods: {
+					inputNum: function(e) {
+						var target = e.target;
+						target.value = (target.value || "").replace(/\D/g, '');
+					},
+				},
+				mounted: function() {
+					initView();
+				}
+			});
+
+			function initView() {
+				mui.plusReady(function() {
+
+					if (plus.webview.currentWebview().type == 'eth') {
+						document.querySelector('.body.active').classList.remove('active');
+						document.querySelector('#ethTab').classList.add('active');
+					}
+
+					mui('.money-row').on('tap', '.body', function() {
+						if (this.classList.contains('active')) return;
+						document.querySelector('.body.active').classList.remove('active');
+						this.classList.add('active');
+					});
+
+					document.querySelector('.mui-btn-primary').addEventListener("tap", function() {
+						FormVerify(function(data) {
+							if (data.money <= 0) {
+								mui.toast(i18n.t('tamountZero'));
+								return;
+							}
+							OpenTransferPwdDialog({
+								callback: function(pwd) {
+									app.ajax({
+										path: '/app!tibi.action',
+										data: data,
+										success: function(eResult) {
+											mui.toast(eResult.message);
+											app.fireView('mine', 'updateData');
+											app.fireView('index', 'updateData');
+											initData();
+										}
+									});
+								}
+							});
+						});
+					});
+
+					initData();
+				});
+			}
+
+			function initData() {
+				getWallet('WALLET04');
+				getWallet('WALLET041');
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!getRate.action',
+					success: function(eResult) {
+						var data = eResult.data;
+						vm.fee = data.fee;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+
+			function getWallet(type) {
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!accountBalance.action',
+					data: {
+						accountType: type,
+					},
+					success: function(eResult) {
+						var data = eResult.data;
+						vm[type] = data;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

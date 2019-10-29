@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>系统设置</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+	</head>
+	<body class="mine-body" lang-cloak>
+		<div class="mui-content settings-content">
+			<ul class="mui-table-view settings-table">
+				<li class="mui-table-view-cell" open-url='/pages/mine/loginpwd.html'>
+					<a class="mui-navigate-right" lang="ploginpwd"></a>
+				</li>
+				<li class="mui-table-view-cell" open-url='/pages/mine/traderpwd.html'>
+					<a class="mui-navigate-right" lang="ptraderpwd"></a>
+				</li>
+			</ul>
+			<ul class="mui-table-view settings-table">
+				<li class="mui-table-view-cell" open-url='/pages/mine/language.html'>
+					<a class="mui-navigate-right">
+						<span lang="planguage"></span>
+						<span class="right"></span>
+					</a>
+				</li>
+			</ul>
+			<ul class="mui-table-view settings-table">
+				<li class="mui-table-view-cell" id="update">
+					<a class="mui-navigate-right">
+						<span lang="versionTitle"></span>
+						<span class="right"></span>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div class="settings-bottom">
+			<button type="button" class="mui-btn mui-btn-block mui-btn-danger" lang="btnLogout"></button>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script src="../../js/update.js"></script>
+		<script>
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						planguage: 'Language',
+						ploginpwd: 'Login Password',
+						ptraderpwd: 'Trader Password',
+						versionTitle: 'App Version',
+						btnLogout: 'Logout',
+						logoutTip: 'Did you log out?',
+						logoutSuccess: 'You have logged out'
+					},
+					zh: {
+						planguage: '语言切换',
+						ploginpwd: '登录密码',
+						ptraderpwd: '交易密码',
+						versionTitle: '系统版本',
+						btnLogout: '退出当前用户',
+						logoutTip: '是否退出登录？',
+						logoutSuccess: '你已退出登录'
+					}
+				}
+			});
+
+			mui.plusReady(function() {
+				document.querySelector('.mui-btn-danger').addEventListener('tap', function() {
+					mui.confirm(i18n.t('logoutTip'), '', i18n.btns(), function(e) {
+						if (e.index == 1) {
+							app.ajax({
+								path: "/app!userLogout.action",
+								success: function(eResult) {
+									mui.toast(i18n.t('logoutSuccess'));
+									app.logout();
+								}
+							});
+						}
+					});
+				});
+
+				document.querySelector('#update').addEventListener('tap', function() {
+					checkUpdate(true, true);
+				});
+
+				plus.runtime.getProperty(plus.runtime.appid, function(inf) {
+					document.querySelector('#update .right').textContent = 'v' + inf.version;
+				});
+
+			});
+		</script>
+	</body>
+</html>

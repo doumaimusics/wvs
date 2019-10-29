@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>忘记密码</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+	</head>
+	<body class="bg-white" lang-cloak>
+		<div class="mui-content findpass-content">
+			<div class="input-content" style="padding-top: 28px;">
+				<div class="mui-input-row input-row">
+					<input id="oldpassword" type="password" class="mui-input-clear" vf='rq' lang="pl_opwd" />
+				</div>
+				<div class="mui-input-row input-row">
+					<input id="newpassword" type="password" class="mui-input-clear" vf="rq,reg=pwd(f_pwderr),tip=alert" lang="pl_npwd" />
+				</div>
+				<div class="mui-input-row input-row">
+					<input id="newpassword_eq" type="password" class="mui-input-clear" vf="rq,eq=newpassword(f_pwdnoequal)" lang="pl_npwd2" />
+				</div>
+				<div class="btn-row">
+					<button type="button" class="mui-btn mui-btn-block mui-btn-primary">确认修改</button>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/form.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script>
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						pl_opwd: 'Please enter your original login password',
+						pl_npwd: 'Please enter a new login password',
+						pl_npwd2: 'Please enter the confirmation login password',
+						f_pwdnoequal: 'Two new passwords are not equal',
+						f_pwderr: 'Login password format is incorrect [6~18 length]',
+						changeSuccess: 'Password has been updated'
+					},
+					zh: {
+						pl_opwd: '请输入原始登录密码',
+						pl_npwd: '请输入新的登录密码',
+						pl_npwd2: '请输入确认登录密码',
+						f_pwdnoequal: '两次输入新的密码不一致',
+						f_pwderr: '登录密码格式不正确[6~18位]',
+						changeSuccess: '修改密码成功'
+					}
+				},
+			});
+
+			mui.plusReady(function() {
+				document.querySelector('.mui-btn-primary').addEventListener("tap", function() {
+					FormVerify(function(data) {
+						data.vtype = 1;
+						app.ajax({
+							path: '/app!changePwd.action',
+							data: data,
+							success: function(eResult) {
+								mui.toast(i18n.t('changeSuccess'));
+								mui.back();
+							}
+						});
+					});
+				});
+			});
+		</script>
+	</body>
+</html>

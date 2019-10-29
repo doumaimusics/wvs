@@ -1,0 +1,183 @@
+.dialog {
+	position: absolute;
+	left: 40px;
+	right: 40px;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 100;
+}
+
+.dialog-container {
+	position: relative;
+	margin: 0 auto;
+	min-height: 130px;
+	border: 1px solid #eee;
+	border-radius: 4px;
+	background: #ffffff;
+}
+
+.dialog-header {
+	line-height: 42px;
+	position: relative;
+	color: #333;
+	text-align: center;
+}
+
+.dialog-close {
+	position: absolute;
+	right: 0;
+	width: 42px;
+	height: 42px;
+	font-size: 18px;
+	text-align: center;
+}
+
+.dialog-show {
+	display: block;
+}
+
+.dialog-mask {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 90;
+	opacity: .3;
+	filter: alpha(opacity=30);
+	background: #000;
+	display: none;
+	-webkit-transition: all 0.3s;
+	-moz-transition: all 0.3s;
+	transition: all 0.3s;
+}
+
+.dialog-body {
+	padding: 8px 16px 12px 16px;
+	margin: 0
+}
+
+.dialog-body .btn-get-code {
+	font-size: 14px;
+	padding: 6px;
+	margin-top: 18px;
+	margin-bottom: 0;
+}
+
+.dialog-container .btn-row {
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+.dialog-vfcode .btn-row {
+	margin-top: 18px;
+}
+
+/* effect-fade */
+.effect-fade .dialog-container {
+	-webkit-transform: scale(0.6);
+	-ms-transform: scale(0.6);
+	transform: scale(0.6);
+	opacity: 0;
+	transition: all .3s;
+}
+
+.dialog-show.effect-fade .dialog-container {
+	-webkit-transform: scale(1);
+	-ms-transform: scale(1);
+	transform: scale(1);
+	opacity: 1;
+}
+
+.input-error {
+	padding: 0 12px;
+	margin: 0;
+	font-size: 16px;
+	color: #FB3558;
+}
+
+.dialog-arrow {
+	width: 0;
+	height: 0;
+	border-top: 100px solid red;
+	border-left: 100px solid transparent;
+}
+
+/**
+ * 自定义
+ */
+.dialog-alert .dialog-header {
+	padding-top: 8px;
+}
+
+.dialog-transfer .dialog-container {
+	padding-bottom: 16px;
+}
+
+.dialog .input-row {
+	border-color: #fff;
+	color: #333;
+}
+
+.dialog .input-row label~input::-webkit-input-placeholder {
+	color: #666;
+}
+
+.dialog .input-row .mui-icon {
+	color: white !important;
+}
+
+.dialog .input-row .mui-icon.mui-active {
+	color: #95EFFA !important;
+}
+
+.dialog-mine {
+	top: 70px;
+	transform: translate(0, 0);
+}
+
+.dialog-mine .dialog-container {
+	background: none;
+	background-image: url(../imgs/bg-popver-mine.png);
+	border: none;
+	background-size: 100% 100%;
+	border-radius: 0;
+	padding-top: 30px;
+}
+
+.dialog-table-mine .mui-table-view-cell .right {
+	right: 12px !important;
+}
+
+.dialog-settings {
+	top: auto;
+	bottom: 80px;
+	transform: translate(0, 0);
+}
+
+.dialog-settings .dialog-container {
+	background: none;
+	background-image: url(../imgs/bg-popver-settings.png);
+	border: none;
+	background-size: 100% 100%;
+	border-radius: 0;
+	padding-bottom: 40px;
+}
+
+.dialog-settings .dialog-body {
+	padding: 8px 16px;
+}
+
+.dialog-settings .dialog-table {
+	margin-bottom: 12px;
+}
+
+.dialog-settings .btn-row {
+	margin-top: 0;
+}
+
+.dialog-glb-money {
+	font-size: 14px;
+	text-align: center;
+	margin-bottom: 6px;
+}

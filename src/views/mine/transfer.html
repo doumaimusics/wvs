@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>转账</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+		<link rel="stylesheet" href="../../css/dialog.css" />
+	</head>
+	<body class="bg-white" lang-cloak>
+		<div class="mui-content" v-cloak>
+			<div class="transfer-top">
+				<div class="body">
+					<span class="name" lang="balance">余额：</span>
+					<div class="value">{{WALLET01}} USDT</div>
+				</div>
+			</div>
+			<div class="transfer-content">
+				<!-- <div class="input-title" style="margin-top: 6px;" lang="accountType"></div>
+				<div class="mui-row money-row">
+					<div class="mui-col-xs-6">
+						<div class="body active" data-type='WALLET01'>
+							<h5>USDT</h5>
+							<p><span lang="balance"></span>：{{WALLET01}}</p>
+						</div>
+					</div>
+					<div class="mui-col-xs-6">
+						<div class="body" data-type='WALLET08'>
+							<h5 lang="income">收益池</h5>
+							<p><span lang="balance"></span>：{{WALLET08}}</p>
+						</div>
+					</div>
+				</div> -->
+				<div class="input-title" style="margin-top: 0;" lang="caccount"></div>
+				<div class="transfer-input-block">
+					<div class="right account-name" v-show="accountName">{{accountName}}</div>
+					<div class="mui-input-row input-row">
+						<input id="inLoginName" v-model="account" type="text" class="mui-input-clear" vf="rq" lang="pl_caccount" />
+					</div>
+				</div>
+				<div class="input-title" lang="tamount"></div>
+				<div class="mui-input-row input-row">
+					<input id="money" v-model="money" type="number" class="mui-input-clear" vf="rq=rq_tamount" lang="pl_tamount" />
+				</div>
+				<div class="input-title" lang="remarks"></div>
+				<div class="mui-input-row input-row">
+					<input id="remark" v-model="remark" type="text" class="mui-input-clear" lang="pl_remarks" />
+				</div>
+				<div class="btn-row">
+					<button type="button" class="mui-btn mui-btn-block mui-btn-primary" lang="btnText"></button>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/vue.min.js"></script>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/form.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script src="../../js/dialog.js"></script>
+		<script>
+			var findAccountNameTimeId = null;
+			var requestData = null;
+
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						balance: 'Balance：',
+						accountType: 'Account type',
+						balance: 'Balance',
+						caccount: 'Collection Account',
+						tamount: 'Transfer amount',
+						pl_caccount: 'Please enter the collection account',
+						pl_tamount: 'Please enter a positive integer',
+						rq_tamount: 'Please enter the transfer amount',
+						err_tamount: 'The transfer amount must be a positive integer',
+						remarks: 'Remarks',
+						pl_remarks: 'Please enter remarks',
+						btnText: 'Confirm transfer',
+						tamountZero: 'Transfer amount must be greater than 0',
+						income: 'Income'
+					},
+					zh: {
+						balance: '余额：',
+						accountType: '账号类型',
+						balance: '余额',
+						caccount: '收款账号',
+						tamount: '转账数量',
+						pl_caccount: '请输入收款账号',
+						pl_tamount: '请输入转账数量',
+						rq_tamount: '请输入转账数量',
+						err_tamount: '转账数量必须是正整数',
+						remarks: '转账备注',
+						pl_remarks: '请输入备注信息',
+						btnText: '确认转账',
+						tamountZero: '转账金额必须大于0',
+						income: '收益池'
+					}
+				}
+			});
+
+			var vm = new Vue({
+				el: '.mui-content',
+				data: {
+					WALLET01: 0,
+					WALLET08: 0,
+					account: '',
+					remark: '',
+					money: '',
+					accountName: '',
+				},
+				watch: {
+					account: function(val) {
+						if (findAccountNameTimeId != null) {
+							clearTimeout(findAccountNameTimeId);
+							findAccountNameTimeId = null;
+						}
+						if (!vm.account) {
+							vm.accountName = '';
+						} else {
+							findAccountNameTimeId = setTimeout(function() {
+								app.ajax({
+									login: false,
+									wait: false,
+									close: false,
+									path: '/app!findUserByMobileOrLoginName.action',
+									data: {
+										loginName: vm.account
+									},
+									success: function(eResult) {
+										vm.accountName = eResult.data;
+									},
+									error: function() {
+										return true;
+									}
+								});
+							}, 400);
+						}
+					},
+				},
+				methods: {
+					inputNum: function(e) {
+						var target = e.target;
+						target.value = (target.value || "").replace(/\D/g, '');
+					},
+				},
+				mounted: function() {
+					initView();
+				}
+			});
+
+			function initView() {
+				mui.plusReady(function() {
+					// var self = plus.webview.currentWebview();
+					// if (self.type) {
+					// 	document.querySelector('.money-row .body.active').classList.remove('active');
+					// 	document.querySelector('.money-row .body[data-type=' + self.type + ']').classList.add('active');
+					// }
+
+					mui('.money-row').on('tap', '.body', function() {
+						if (this.classList.contains('active')) return;
+						document.querySelector('.body.active').classList.remove('active');
+						this.classList.add('active');
+					});
+
+					document.querySelector('.mui-btn-primary').addEventListener("tap", function() {
+						FormVerify(function(data) {
+
+							// data.accountType = document.querySelector('.money-row .active').dataset.type;
+
+							data.accountType = 'USDT';
+
+							if (data.money <= 0) {
+								mui.toast(i18n.t('tamountZero'));
+								return;
+							}
+
+							OpenTransferPwdDialog({
+								callback: function(pwd) {
+									OpenVfCodeDialog({
+										vtype: 'ZUANGZHANG',
+										callback: function(code) {
+											data.authCode = code;
+											app.ajax({
+												path: '/app!zhuanzhang.action',
+												data: data,
+												success: function(eResult) {
+													CloseVfCodeDialog();
+													mui.toast(eResult.message);
+													app.fireView('mine', 'updateData');
+													app.fireView('index', 'updateData');
+													initData();
+												}
+											});
+										}
+									});
+								}
+							});
+						});
+					});
+
+					initData();
+				});
+			}
+
+			function initData() {
+				getWallet('WALLET01');
+				//getWallet('WALLET08');
+			}
+
+			function getWallet(type) {
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!accountBalance.action',
+					data: {
+						accountType: type,
+					},
+					success: function(eResult) {
+						var data = eResult.data;
+						vm[type] = data;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

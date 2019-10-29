@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>交易明细</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../lib/mescroll.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+	</head>
+	<body>
+		<div class="mui-content mui-fullscreen transferlist-content">
+			<div id="slider" class="mui-slider slider-fullscreen recharge-slider">
+				<div class="slider-control">
+					<div class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+						<a class="mui-control-item mui-active" href="#item0" lang="ecology">生态</a>
+						<a class="mui-control-item" href="#item1" lang="income">收益池</a>
+						<a class="mui-control-item" href="#item2" lang="income">动态池</a>
+						<a class="mui-control-item" href="#item3">USDT</a>
+					</div>
+					<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-3"></div>
+				</div>
+				<div class="mui-slider-group">
+					<div id="item0" class="mui-slider-item mui-control-content mui-active">
+						<div id="mescroll0" class="mescroll">
+							<div id="datalist0" class="transferlist">
+								<!-- <div class="item">
+									<div class="row">
+										<span class="change">+ 120 USDT</span>
+										<span class="type">类型</span>
+									</div>
+									<p class="content">明细</p>
+									<div class="row">
+										<span class="time">18-12-12 15:11</span>
+										<span class="status">状态</span>
+									</div>
+								</div> -->
+							</div>
+						</div>
+					</div>
+					<div id="item1" class="mui-slider-item mui-control-content">
+						<div id="mescroll1" class="mescroll">
+							<div id="datalist1" class="transferlist"></div>
+						</div>
+					</div>
+					<div id="item2" class="mui-slider-item mui-control-content">
+						<div id="mescroll2" class="mescroll">
+							<div id="datalist2" class="transferlist"></div>
+						</div>
+					</div>
+					<div id="item3" class="mui-slider-item mui-control-content">
+						<div id="mescroll3" class="mescroll">
+							<div id="datalist3" class="transferlist"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../lib/mescroll.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script>
+			i18n.init({
+				res: {
+					en: {
+						ecology: 'Ecology',
+						income: 'Income',
+					},
+					zh: {
+						ecology: '生态',
+						income: '收益池',
+					}
+				}
+			});
+
+			var mescrolls = {},
+				currentMescroll = null;
+
+			mui.init({
+				swipeBack: false
+			});
+
+			mui.plusReady(function() {
+
+				document.querySelector("#slider").addEventListener('slide', function(e) {
+					var i = e.detail.slideNumber;
+					var mescroll = mescrolls[i];
+					if (!mescroll) {
+						mescrolls[i] = mescroll = initMescroll(i);
+						if (currentMescroll) {
+							currentMescroll.hideTopBtn();
+						}
+						currentMescroll = mescroll;
+					} else if (mescroll != currentMescroll) {
+						var scrollTop = mescroll.getScrollTop();
+						if (screenTop >= mescroll.optUp.toTop.offset) {
+							mescroll.showTopBtn();
+						} else {
+							mescroll.hideTopBtn();
+						}
+						if (currentMescroll) {
+							currentMescroll.hideTopBtn();
+						}
+						currentMescroll = mescroll;
+					}
+				});
+
+				window.addEventListener("updateData", function() {
+					if (currentMescroll) {
+						currentMescroll.resetUpScroll(true);
+					}
+				});
+
+				var index = plus.webview.currentWebview().index;
+				if (index > 0) {
+					mui('#slider').slider().gotoItem(index, 0);
+				} else {
+					mescrolls[0] = currentMescroll = initMescroll(0);
+				}
+			});
+
+			function initMescroll(index) {
+				var status = null;
+				if (index == 0) {
+					status = 'WALLET07';
+				} else if (index == 1) {
+					status = 'WALLET08';
+				} else if (index == 2) {
+					status = 'WALLET10';
+				} else {
+					status = 'WALLET01';
+				}
+
+				var data = {
+					accountType: status
+				};
+				var options = {
+					path: '/app!accountDetails.action',
+					data: data,
+					mescrollId: 'mescroll' + index,
+					datalistId: 'datalist' + index,
+					loadItem: function(data, datalist) {
+						var fragment = document.createDocumentFragment();
+
+						data.forEach(function(n) {
+							var time = n.optDate ? n.optDate.DateFormat("yy-MM-dd hh:mm") : '';
+							var changeMoney = '',
+								changeClass = '';
+							if (n.expenditure > 0) {
+								changeMoney = '- ' + n.expenditure;
+							} else if (n.income > 0) {
+								changeMoney = '+ ' + n.income;
+								changeClass = 'plus';
+							}
+
+							var html = '<div class="row">' +
+								'<span class="change ' + changeClass + '">' + changeMoney + '</span>' +
+								'<span class="type">' + n.transactionType + '</span></div>' +
+								'<p class="content">' + n.aliasName + '</p>' +
+								'<div class="row">' +
+								'<span class="time">' + time + '</span>' +
+								'<span class="status">' + n.status + '</span></div>';
+
+							var tr = document.createElement("div");
+							tr.className = 'item';
+							tr.innerHTML = html;
+							document.querySelector('#datalist' + index).appendChild(tr);
+						});
+
+						datalist.appendChild(fragment);
+					}
+				};
+				var mescroll = InitDataMescroll(options);
+				mescroll.requestData = data;
+				return mescroll;
+			}
+		</script>
+	</body>
+</html>

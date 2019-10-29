@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>参与ISO</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+		<link rel="stylesheet" href="../../css/dialog.css" />
+	</head>
+	<body class="bg-white" lang-cloak>
+		<div class="mui-content" v-cloak>
+			<div class="transfer-content">
+				<div class="simu-top">
+					<h5 class="rate">$ {{wvsPrice}}</h5>
+					<h5 class="title" lang="isoPrice">ISO价格</h5>
+				</div>
+				<div class="input-title" style="margin-top: 28px;" lang="isoAmount">ISO数量（WVS）</div>
+				<div class="mui-input-row input-row">
+					<input v-model="quy" type="text" class="mui-input-clear" lang="pl_amount" />
+				</div>
+				<p class="simu-compute" v-show="payText"><span lang="cost"></span>：{{payText}}</p>
+				<div class="input-title" lang="payAccount">支付账号</div>
+				<div class="mui-row money-row">
+					<div class="mui-col-xs-6">
+						<div class="body active" data-type="USDT">
+							<h5>USDT</h5>
+							<p><span lang="balance"></span>：{{WALLET01}}</p>
+						</div>
+					</div>
+					<div class="mui-col-xs-6">
+						<div class="body" data-type="ETH">
+							<h5>ETH（$ {{ethPrice}}）</h5>
+							<p><span lang="balance"></span>：{{WALLET02}}</p>
+						</div>
+					</div>
+				</div>
+				<div class="btn-row">
+					<button type="button" class="mui-btn mui-btn-block mui-btn-primary" lang="btnText">确认支付</button>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../lib/vue.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script src="../../js/dialog.js"></script>
+		<script>
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						isoPrice: 'ISO Price',
+						isoAmount: 'ISO Amount（WVS）',
+						balance: 'Balance',
+						payAccount: 'Pay Account',
+						cost: 'Cost',
+						btnText: 'Confirm Pay',
+						pl_amount: 'ISO Amount from 1000',
+						tip_amount: 'From ISO 1000, you can only purchase a multiple of 1000',
+						or: ' Or '
+					},
+					zh: {
+						isoPrice: 'ISO价格',
+						isoAmount: 'ISO数量（WVS）',
+						balance: '余额',
+						payAccount: '支付账号',
+						cost: '应付',
+						btnText: '确认支付',
+						pl_amount: 'ISO数量1000起',
+						tip_amount: 'ISO1000起，只能购买1000的倍数的数量',
+						or: ' 或 '
+					}
+				}
+			});
+
+			var vm = new Vue({
+				el: '.mui-content',
+				data: {
+					WALLET01: 0,
+					WALLET02: 0,
+					wvsPrice: 0,
+					ethPrice: 0,
+					usdtPrice: 0,
+					quy: ''
+				},
+				computed: {
+					payText: function() {
+						if (this.quy && this.wvsPrice && this.ethPrice && this.usdtPrice) {
+							var quyNum = parseInt(this.quy);
+							if (quyNum > 0) {
+								var total = quyNum * this.wvsPrice;
+								var usdtTotal = ToMoney(total);
+								var ethTotal = ToMoney4(total / this.ethPrice);
+								return usdtTotal + ' USDT' + i18n.t('or') + ethTotal + ' ETH';
+							}
+						}
+						return '';
+					}
+				},
+				watch: {
+					quy: function() {
+						this.quy = (this.quy || "").replace(/\D/g, '');
+					}
+				},
+				mounted: function() {
+					initView();
+				}
+			});
+
+			function initView() {
+				mui.plusReady(function() {
+
+					mui('.money-row').on('tap', '.body', function() {
+						if (this.classList.contains('active')) return;
+						document.querySelector('.body.active').classList.remove('active');
+						this.classList.add('active');
+					});
+
+					document.querySelector('.mui-btn-primary').addEventListener('tap', function() {
+						var quyNum = parseInt(vm.quy);
+						if (!quyNum || quyNum < 1000 || quyNum % 1000 > 0) {
+							mui.alert(i18n.t('tip_amount'), i18n.t('tip'), i18n.confirm());
+							return;
+						}
+						var type = document.querySelector('.body.active').dataset.type;
+						OpenTransferPwdDialog({
+							callback: function(pwd) {
+								app.ajax({
+									path: '/app!privatePlacement.action',
+									data: {
+										quy: quyNum,
+										accountDype: type,
+									},
+									success: function(eResult) {
+										vm.quy = '';
+										getWallet('WALLET01');
+										getWallet('WALLET02');
+										mui.toast(eResult.message);
+										app.fireView('mine', 'updateData');
+										app.fireView('index', 'updateData');
+									}
+								});
+							}
+						});
+
+					});
+
+					//获取价格
+					app.ajax({
+						wait: false,
+						close: false,
+						back: true,
+						path: '/app!getSystemSettingData.action',
+						success: function(eResult) {
+							var data = eResult.data;
+							vm.wvsPrice = data.wvsPrice || 0;
+							vm.ethPrice = data.ethPrice || 0;
+							vm.usdtPrice = data.usdtPrice || 0;
+						}
+					});
+
+					getWallet('WALLET01');
+					getWallet('WALLET02');
+
+				});
+			}
+
+			function getWallet(type) {
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!accountBalance.action',
+					data: {
+						accountType: type,
+					},
+					success: function(eResult) {
+						var data = eResult.data;
+						vm[type] = data;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

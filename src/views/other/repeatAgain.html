@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+		<title>复投</title>
+		<link rel="stylesheet" href="../../lib/mui.min.css" />
+		<link rel="stylesheet" href="../../css/app.css" />
+		<link rel="stylesheet" href="../../css/bottom-view.css" />
+		<link rel="stylesheet" href="../../css/buy-again.css" />
+	</head>
+
+	<body>
+		<div class="bottom-view-mask"></div>
+		<div class="bottom-view">
+			<div class="mui-slider">
+				<div class="mui-slider-group">
+					<div class="mui-slider-item info-item">
+						<div class="info-title" lang="info_title">存入</div>
+						<div class="money"> <span lang="balance">余额</span><span id="money">0</span>USDT</div>
+						<div class="input-block">
+							<div class="title" lang="amount">存入数量</div>
+							<div class="mui-input-row">
+								<input id="quy" type="number" class="mui-input-clear" lang="amount_pl">
+							</div>
+						</div>
+						<div class="btn-row">
+							<button id="btnNext" type="button" class="mui-btn mui-btn-block mui-btn-blue" lang="confirm"></button>
+						</div>
+					</div>
+					<div class="mui-slider-item transfer-item">
+						<div class="transfer-header">
+							<img class="back" src="../../svg/bottom-view-back.svg" />
+							<div class="title" lang="pwd_title">交易密码</div>
+						</div>
+						<div class="input-block">
+							<div class="mui-input-row">
+								<input id="pwd" type="password" class="mui-input-clear" lang="pwd_pl">
+							</div>
+						</div>
+						<div class="btn-row">
+							<button id="btnPay" type="button" class="mui-btn mui-btn-block mui-btn-blue" lang="confirm"></button>
+						</div>
+					</div>
+					<div class="mui-slider-item finish-item">
+						<div class="finish-item-top">
+							<img src="../../svg/bottom-view-finish.svg" />
+							<p class="finish-text" lang="finish_text">存入成功</p>
+						</div>
+						<div class="btn-row">
+							<button id="btnFinish" type="button" class="mui-btn mui-btn-block mui-btn-grey" lang="finish"></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="../../lib/mui.min.js"></script>
+		<script src="../../js/app.js"></script>
+		<script src="../../js/utils.js"></script>
+		<script charset="utf-8">
+			i18n.init({
+				lang: app.getLanguage(),
+				res: {
+					en: {
+						info_title: 'Repeat',
+						balance: 'Balance',
+						amount: 'Repeat Amount',
+						amount_pl: 'Please enter the repeat amount, multiple of 10',
+						amount_empty: 'Please enter the repeat amount',
+						amount_error: 'The number of repeat does not meet the requirements. Please enter a multiple of 10.',
+						confirm: 'Confirm',
+						pwd_title: 'Transaction password',
+						pwd_pl: 'Please enter the transaction password',
+						finish_text: 'Repeat Success',
+						finish: 'Finish'
+					},
+					zh: {
+						info_title: '复投',
+						balance: '余额',
+						amount: '复投数量',
+						amount_pl: '请输入复投数量，10的倍数',
+						amount_empty: '请输入复投数量',
+						amount_error: '复投数量不符合要求，请输入10的倍数',
+						confirm: '确认',
+						pwd_title: '交易密码',
+						pwd_pl: '请输入交易密码',
+						finish_text: '复投成功',
+						finish: '完成'
+					}
+				},
+			});
+
+			var slider = mui('.mui-slider').slider();
+			slider.stopped = true;
+
+			var needRefresh, quy;
+
+			mui.plusReady(function() {
+				var self = plus.webview.currentWebview();
+
+				toggleMask(true);
+
+				document.querySelector('.back').addEventListener('tap', function() {
+					slider.gotoItem(0);
+				});
+
+				document.querySelector('.bottom-view-mask').addEventListener('tap', function() {
+					if (needRefresh) {
+						app.fireView('mine', 'updateData');
+					}
+					toggleMask(false);
+					self.close();
+				});
+
+				document.querySelector('#btnFinish').addEventListener('tap', function() {
+					app.fireView('mine', 'updateData');
+					toggleMask(false);
+					self.close();
+				});
+
+				document.querySelector('#btnNext').addEventListener('tap', function() {
+					quy = document.querySelector('#quy').value;
+					if (quy) quy = quy.trim();
+					if (!quy) {
+						mui.toast(i18n.t('amount_empty'));
+					} else if (quy % 10 != 0) {
+						mui.toast(i18n.t('amount_error'));
+					} else {
+						slider.gotoItem(1);
+					}
+				});
+
+				document.querySelector('#btnPay').addEventListener('tap', function() {
+					var pwd = document.querySelector('#pwd').value;
+					if (!pwd) {
+						mui.toast(i18n.t('pwd_pl'));
+					} else {
+						app.ajax({
+							path: '/app!tranPasswordValid.action',
+							data: {
+								'password': pwd
+							},
+							success: function(e) {
+								app.ajax({
+									path: "/app!deposit.action",
+									data: {
+										quy: quy,
+										accountType: 'WALLET08'
+									},
+									success: function(eResult) {
+										needRefresh = true;
+										slider.gotoItem(2);
+									}
+								});
+							}
+						});
+					}
+				});
+
+				getWallet();
+
+			});
+
+			function getWallet() {
+				app.ajax({
+					wait: false,
+					close: false,
+					path: '/app!accountBalance.action',
+					data: {
+						accountType: "WALLET08",
+					},
+					success: function(eResult) {
+						var data = eResult.data;
+						document.querySelector('#money').innerHTML = data;
+					},
+					error: function(msg) {
+						return true;
+					}
+				});
+			}
+
+			function toggleMask(show) {
+				if (show) {
+					document.querySelector('.bottom-view-mask').className = 'bottom-view-mask show';
+				} else {
+					document.querySelector('.bottom-view-mask').className = 'bottom-view-mask close';
+				}
+			}
+		</script>
+	</body>
+
+</html>

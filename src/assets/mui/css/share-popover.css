@@ -1,0 +1,13 @@
+#remarksPopover {width: 300px;height: 240px;text-align: center;border-radius: 6px;}
+#remarksPopover .title {color: #262833FF;font-size: 18px;font-weight: bold;line-height: 52px;}
+#remarksPopover .text {font-size: 14px;padding: 6px;}
+#remarksPopover .text0 {color: #000;font-size: 15px;}
+#remarksPopover .text1 {color: #333;}
+#remarksPopover .yellow0 {color: #ED5329FF;}
+#remarksPopover .yellow1 {color: #E6B43E;}
+#remarksPopover .yellow2 {color: #FF9D10FF;}
+#remarksPopover .grey {color: #AAAAAA;}
+#remarksPopover .btn-row {position: absolute;bottom: 0;left: 0;right: 0;padding: 0;margin: 0;}
+#remarksPopover .btn-row button {border-radius: 0 0 6px 6px;margin: 0;}
+#remarksPopover .mui-btn-grey {background: #F2F2F2;border-color: #F2F2F2;color: #285BDEFF;}
+#remarksPopover .mui-btn-grey:enabled:active {background: #E3E3E3;border-color: #E3E3E3;color: #285BDEFF;}
